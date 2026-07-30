@@ -1,6 +1,6 @@
 // ATS Engine v1.1 — Batch Processing with Deduplication
 // 🔧 CONFIGURATION: Change this to your deployed backend URL after deploying to Render
-const API_BASE_URL = window.location.origin.startsWith('file:') 
+const API_BASE_URL = (window.location.origin.startsWith('file:') || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
     ? 'http://127.0.0.1:8000' 
     : window.location.origin;
 
@@ -167,6 +167,28 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showAuthScreen('login');
     }
+
+    // --- 👁️ GLOBAL DELEGATED PASSWORD VISIBILITY TOGGLE ---
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.toggle-password-btn');
+        if (!btn) return;
+        e.preventDefault();
+        const wrapper = btn.closest('.password-wrapper');
+        if (!wrapper) return;
+        const input = wrapper.querySelector('input');
+        const eyeShow = btn.querySelector('.eye-show');
+        const eyeHide = btn.querySelector('.eye-hide');
+        
+        if (input && input.type === 'password') {
+            input.type = 'text';
+            if (eyeShow) eyeShow.classList.add('hidden');
+            if (eyeHide) eyeHide.classList.remove('hidden');
+        } else if (input) {
+            input.type = 'password';
+            if (eyeShow) eyeShow.classList.remove('hidden');
+            if (eyeHide) eyeHide.classList.add('hidden');
+        }
+    });
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {

@@ -1270,6 +1270,73 @@ body.dark-mode .jd-clear-link:hover {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
 }
 
+/* Suppress native browser password reveal icon overlays */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
+.password-wrapper {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+}
+
+.password-wrapper input {
+    padding-right: 48px !important;
+}
+
+.toggle-password-btn {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    padding: 6px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    color: #a5b4fc !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    z-index: 20 !important;
+    line-height: 1 !important;
+    width: 34px !important;
+    height: 34px !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s ease !important;
+}
+
+.toggle-password-btn:hover {
+    background: rgba(99, 102, 241, 0.35) !important;
+    border-color: #a5b4fc !important;
+    color: #ffffff !important;
+}
+
+.toggle-password-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+    stroke: #a5b4fc !important;
+    pointer-events: none !important;
+    display: block !important;
+    flex-shrink: 0 !important;
+}
+
+.toggle-password-btn svg.hidden,
+.toggle-password-btn .hidden {
+    display: none !important;
+}
+
 .auth-btn {
     background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     color: #ffffff;
