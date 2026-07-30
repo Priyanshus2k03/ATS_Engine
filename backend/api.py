@@ -750,43 +750,48 @@ async def evaluate_resume(file_bytes: bytes, filename: str, jd: str, cfg: Filter
 @app.post("/api/auth/login")
 async def auth_login(req: LoginRequest):
     email = req.email.strip().lower()
-    password = req.password.strip()
+    raw_password = req.password.strip()
     
+    # Auto-seed default user if missing
     user = await asyncio.to_thread(get_user_by_email, email)
-    
-    # If default user doesn't exist, create it on the fly
     if not user and email == "hr@jobuss.com":
         default_pass = "Jobuss_456"
         hashed_default = hashlib.sha256(default_pass.encode()).hexdigest()
         from backend.db import _get_connection
         conn = _get_connection()
         try:
-            conn.execute("INSERT OR IGNORE INTO users (email, password_hash) VALUES (?, ?)", (email, hashed_default))
+            conn.execute("INSERT OR REPLACE INTO users (email, password_hash) VALUES (?, ?)", (email, hashed_default))
             conn.commit()
         finally:
             conn.close()
         user = await asyncio.to_thread(get_user_by_email, email)
-        
+
     if not user:
         logger.warning(f"Login failed — email not found: {email}")
         raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    hashed_input = hashlib.sha256(raw_password.encode()).hexdigest()
     
-    hashed_input = hashlib.sha256(password.encode()).hexdigest()
+    # Check exact hash match
+    is_valid = (user["password_hash"] == hashed_input)
     
-    # Common demo password variations for hr@jobuss.com
-    accepted_defaults = ["Jobuss_456", "Jobuss@456", "jobuss_456", "jobuss@456", "Jobuss123", "jobuss123", "123456", "jobuss", "admin123", "admin"]
-    accepted_hashes = {hashlib.sha256(p.encode()).hexdigest() for p in accepted_defaults}
-    
-    is_valid = (user["password_hash"] == hashed_input) or (email == "hr@jobuss.com" and hashed_input in accepted_hashes)
-    
+    # If hr@jobuss.com, accept any case variation of Jobuss_456 or standard admin defaults
+    if not is_valid and email == "hr@jobuss.com":
+        valid_defaults = ["jobuss_456", "jobuss@456", "jobuss456", "jobuss123", "jobuss", "123456", "admin"]
+        if raw_password.lower() in valid_defaults or raw_password.strip() in ["Jobuss_456", "Jobuss@456"]:
+            is_valid = True
+            # Update hash to keep DB synced
+            await asyncio.to_thread(update_user_password, email, hashed_input)
+
     if not is_valid:
         logger.warning(f"Login failed — password mismatch for: {email}")
-        raise HTTPException(status_code=401, detail="Invalid email or password. Password is case-sensitive.")
-        
+        raise HTTPException(status_code=401, detail="Invalid email or password. Default password is Jobuss_456")
+
     token = str(uuid.uuid4())
     ACTIVE_SESSIONS[token] = user["email"]
     logger.info(f"User logged in successfully: {email}")
     return {"token": token, "email": user["email"]}
+
 
 
 

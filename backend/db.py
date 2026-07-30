@@ -51,7 +51,7 @@ def init_db():
             )
         """)
         
-        # Seed default user hr@jobuss.com if not already in DB
+        # Seed or sync default user hr@jobuss.com
         import hashlib
         default_email = "hr@jobuss.com"
         default_pass = "Jobuss_456"
@@ -61,7 +61,8 @@ def init_db():
             conn.execute("INSERT INTO users (email, password_hash) VALUES (?, ?)", (default_email, hashed))
             logger.info(f"Default user seeded: {default_email}")
         else:
-            logger.info(f"Default user already exists: {default_email}")
+            conn.execute("UPDATE users SET password_hash = ? WHERE email = ?", (hashed, default_email))
+            logger.info(f"Default user password synced: {default_email}")
             
         conn.commit()
         logger.info(f"JD Database initialized at: {DB_PATH}")
