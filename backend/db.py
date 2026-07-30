@@ -51,13 +51,13 @@ def init_db():
             )
         """)
         
-        # Seed default user if users table is empty
-        cursor = conn.execute("SELECT COUNT(*) FROM users")
-        if cursor.fetchone()[0] == 0:
-            import hashlib
-            default_email = "hr@jobuss.com"
-            default_pass = "Jobuss@456"
-            hashed = hashlib.sha256(default_pass.encode()).hexdigest()
+        # Seed default user if hr@jobuss.com does not exist
+        import hashlib
+        default_email = "hr@jobuss.com"
+        default_pass = "Jobuss@456"
+        hashed = hashlib.sha256(default_pass.encode()).hexdigest()
+        cursor = conn.execute("SELECT * FROM users WHERE email = ?", (default_email,))
+        if not cursor.fetchone():
             conn.execute("INSERT INTO users (email, password_hash) VALUES (?, ?)", (default_email, hashed))
             logger.info(f"Default user seeded: {default_email}")
             

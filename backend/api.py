@@ -749,16 +749,21 @@ async def evaluate_resume(file_bytes: bytes, filename: str, jd: str, cfg: Filter
 
 @app.post("/api/auth/login")
 async def auth_login(req: LoginRequest):
-    user = await asyncio.to_thread(get_user_by_email, req.email)
+    email = req.email.strip().lower()
+    password = req.password.strip()
+    user = await asyncio.to_thread(get_user_by_email, email)
     if not user:
+        logger.warning(f"Login failed — email not found: {email}")
         raise HTTPException(status_code=401, detail="Invalid email or password.")
     
-    hashed_input = hashlib.sha256(req.password.encode()).hexdigest()
+    hashed_input = hashlib.sha256(password.encode()).hexdigest()
     if user["password_hash"] != hashed_input:
+        logger.warning(f"Login failed — password mismatch for: {email}")
         raise HTTPException(status_code=401, detail="Invalid email or password.")
         
     token = str(uuid.uuid4())
     ACTIVE_SESSIONS[token] = user["email"]
+    logger.info(f"User logged in successfully: {email}")
     return {"token": token, "email": user["email"]}
 
 
