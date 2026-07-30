@@ -184,12 +184,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ email, password })
                 });
                 
+                const text = await response.text();
+                let data = null;
+                try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+                
                 if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Authentication failed');
+                    const errorDetail = (data && data.detail) ? data.detail : (text || 'Authentication failed');
+                    throw new Error(errorDetail);
                 }
                 
-                const data = await response.json();
+                if (!data || !data.token) throw new Error('Invalid response from server');
+
                 sessionStorage.setItem('ats_token', data.token);
                 sessionStorage.setItem('ats_email', data.email);
                 
@@ -228,9 +233,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ email })
                 });
                 
+                const text = await response.text();
+                let data = null;
+                try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+
                 if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Request failed');
+                    const errorDetail = (data && data.detail) ? data.detail : (text || 'Request failed');
+                    throw new Error(errorDetail);
                 }
                 
                 if (window.showToast) window.showToast('Reset code logged to backend terminal!', 'success');
@@ -293,9 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ email, code, new_password: newPassword })
                 });
                 
+                const text = await response.text();
+                let data = null;
+                try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+
                 if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Reset failed');
+                    const errorDetail = (data && data.detail) ? data.detail : (text || 'Reset failed');
+                    throw new Error(errorDetail);
                 }
                 
                 if (window.showToast) window.showToast('Password updated! Please sign in.', 'success');
